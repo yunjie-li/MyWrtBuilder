@@ -18,7 +18,7 @@ PACKAGES="$PACKAGES luci-i18n-diskman-zh-cn"
 # CPU 占用限制
 PACKAGES="$PACKAGES luci-i18n-cpulimit-zh-cn"
 # collectd 统计
-PACKAGES="$PACKAGES luci-i18n-statistics-zh-cn"
+# PACKAGES="$PACKAGES luci-i18n-statistics-zh-cn"
 
 # 常用软件服务
 
@@ -32,7 +32,10 @@ PACKAGES="$PACKAGES luci-app-openclash"
 # 常用的网络存储组件
 
 # 文件助手
-PACKAGES="$PACKAGES luci-app-fileassistant"
+# PACKAGES="$PACKAGES luci-app-fileassistant"
+PACKAGES="$PACKAGES luci-i18n-filebrowser-go-zh-cn"
+# UPNP
+PACKAGES="$PACKAGES luci-app-upnp"
 # 硬盘休眠
 # PACKAGES="$PACKAGES luci-i18n-hd-idle-zh-cn"
 # p910nd 打印服务器
