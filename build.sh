@@ -37,7 +37,10 @@ PACKAGES="$PACKAGES luci-app-openclash"
 
 # 文件助手
 # PACKAGES="$PACKAGES luci-app-fileassistant"
+PACKAGES="$PACKAGES luci-i18n-package-manager-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-filebrowser-go-zh-cn"
+# TTYD
+PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
 # UPNP
 PACKAGES="$PACKAGES luci-app-upnp"
 # 硬盘休眠
