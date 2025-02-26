@@ -72,21 +72,21 @@ jobs:
 
       - name: Upload VDI Image For Development Purpose
         if: github.ref == 'refs/heads/dev'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@main
         with:
           name: ${{ env.VENDOR }}-${{ env.VERSION }}-x86_64-vdi-image-${{ env.DATETIME }}
           path: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64/bin/targets/x86/64/*.vdi
 
       - name: Upload All Firmware to Artifacts
         if: github.event.inputs.upload-all == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@main
         with:
           name: ${{ env.VENDOR }}-${{ env.VERSION }}-x86_64-images-${{ env.DATETIME }}
           path: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64/bin/targets/x86/64/*
 
       - name: Upload Firmware to Release
         if: github.event.inputs.release == 'true'
-        uses: svenstaro/upload-release-action@v3
+        uses: softprops/action-gh-release@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
