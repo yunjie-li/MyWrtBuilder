@@ -42,7 +42,7 @@ PACKAGES="$PACKAGES luci-i18n-filebrowser-go-zh-cn"
 # TTYD
 PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
 # UPNP
-PACKAGES="$PACKAGES luci-app-upnp"
+PACKAGES="$PACKAGES luci-i18n-upnp-zh-cn"
 # 硬盘休眠
 # PACKAGES="$PACKAGES luci-i18n-hd-idle-zh-cn"
 # p910nd 打印服务器
