@@ -23,7 +23,7 @@ PACKAGES="$PACKAGES luci-theme-argon luci-i18n-argon-config-zh-cn"
 # Diskman 磁盘管理
 PACKAGES="$PACKAGES luci-i18n-diskman-zh-cn"
 # CPU 占用限制
-PACKAGES="$PACKAGES luci-i18n-cpulimit-zh-cn"
+# PACKAGES="$PACKAGES luci-i18n-cpulimit-zh-cn"
 # collectd 统计
 # PACKAGES="$PACKAGES luci-i18n-statistics-zh-cn"
 
