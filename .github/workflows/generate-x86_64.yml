@@ -68,10 +68,16 @@ jobs:
           bash scripts/clash.sh
           bash scripts/zsh.sh
 
-      - name: Generate Firmware
+      - name: Copy config file
         working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
         run: |
-          cp files/.config .config
+          if [ -f "files/.config" ]; then
+            cp files/.config .config
+            echo "Config file copied successfully"
+          else
+            echo "Error: files/.config does not exist"
+            exit 1
+          fi
 
       - name: Generate Firmware
         working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
