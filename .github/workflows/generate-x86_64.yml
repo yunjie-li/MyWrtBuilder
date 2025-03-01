@@ -46,15 +46,19 @@ jobs:
         with: 
           path: origin
 
+      # Update package URLs list
       - name: Update Package URLs
+        if: ${{ github.event.inputs.update-urls == 'true' }}
         working-directory: origin
         run: |
           if [ -f "external-package-urls.sh" ]; then
-            echo "execute external-package-urls.sh..."
+            echo "Executing URL update script..."
             chmod +x external-package-urls.sh
             ./external-package-urls.sh
+            echo "Updated URL list:"
+            cat external-package-urls.txt
           else
-            echo "no external-package-urls.sh"
+            echo "external-package-urls.sh script not found, skipping URL update"
           fi
       
       - name: Download Image Builder
@@ -75,10 +79,9 @@ jobs:
               
               if [[ "$line" == archive:* ]]; then
                 archive_url="${line#archive:}"
-                echo "download: $archive_url"
+                echo "Downloading and extracting: $archive_url"
                 
                 temp_dir=$(mktemp -d)
-                
                 filename=$(basename "$archive_url")
                 
                 wget -O "$temp_dir/$filename" "$archive_url" || { echo "ERROR: Failed to download $archive_url"; continue; }
@@ -92,23 +95,22 @@ jobs:
                 elif [[ "$filename" == *.tar.bz2 ]]; then
                   tar -xjf "$temp_dir/$filename" -C "$temp_dir"
                 else
-                  echo "not support file: $filename"
+                  echo "Unsupported compression format: $filename"
                   continue
                 fi
                 
                 find "$temp_dir" -name "*.ipk" -exec cp {} packages/ \;
-                
                 rm -rf "$temp_dir"
               else
-                echo "download: $line"
+                echo "Downloading: $line"
                 wget -P packages "$line" || echo "ERROR: Failed to download $line"
               fi
             done
             
-            echo "download finisht"
+            echo "All packages downloaded"
             ls -la packages/
           else
-            echo "external-package-urls.txt not exist"
+            echo "external-package-urls.txt file does not exist, skipping external package download"
           fi
       
       - name: Run Patch and DIY Scripts
