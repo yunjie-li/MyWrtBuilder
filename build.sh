@@ -44,7 +44,6 @@ PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
 # zsh 终端
 PACKAGES="$PACKAGES zsh"
 PACKAGES="$PACKAGES git"
-PACKAGES="$PACKAGES wget"
 PACKAGES="$PACKAGES wget-ssl"
 # Vim 完整版，带语法高亮
 PACKAGES="$PACKAGES vim-fuller"
