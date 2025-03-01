@@ -49,7 +49,7 @@ jobs:
       - name: Update Package URLs
         working-directory: origin
         run: |
-          if [ -f "update-urls.sh" ]; then
+          if [ -f "external-package-urls.sh" ]; then
             echo "execute external-package-urls.sh..."
             chmod +x external-package-urls.sh
             ./external-package-urls.sh
