@@ -70,18 +70,46 @@ jobs:
           mkdir -p packages
           
           if [ -f "external-package-urls.txt" ]; then
-            cat external-package-urls.txt | grep -v "^#" | while read url; do
-              [ -z "$url" ] && continue
+            cat external-package-urls.txt | grep -v "^#" | while read line; do
+              [ -z "$line" ] && continue
               
-              echo "Downloading: $url"
-              wget -P packages "$url" || echo "ERROR: Failed to download $url"
+              if [[ "$line" == archive:* ]]; then
+                archive_url="${line#archive:}"
+                echo "download: $archive_url"
+                
+                temp_dir=$(mktemp -d)
+                
+                filename=$(basename "$archive_url")
+                
+                wget -O "$temp_dir/$filename" "$archive_url" || { echo "ERROR: Failed to download $archive_url"; continue; }
+                
+                if [[ "$filename" == *.tar.gz ]] || [[ "$filename" == *.tgz ]]; then
+                  tar -xzf "$temp_dir/$filename" -C "$temp_dir"
+                elif [[ "$filename" == *.zip ]]; then
+                  unzip -q "$temp_dir/$filename" -d "$temp_dir"
+                elif [[ "$filename" == *.tar.xz ]]; then
+                  tar -xJf "$temp_dir/$filename" -C "$temp_dir"
+                elif [[ "$filename" == *.tar.bz2 ]]; then
+                  tar -xjf "$temp_dir/$filename" -C "$temp_dir"
+                else
+                  echo "not support file: $filename"
+                  continue
+                fi
+                
+                find "$temp_dir" -name "*.ipk" -exec cp {} packages/ \;
+                
+                rm -rf "$temp_dir"
+              else
+                echo "download: $line"
+                wget -P packages "$line" || echo "ERROR: Failed to download $line"
+              fi
             done
             
-            echo "download external packages finish"
+            echo "download finisht"
             ls -la packages/
           else
             echo "external-package-urls.txt not exist"
-          fi        
+          fi
       
       - name: Run Patch and DIY Scripts
         working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
