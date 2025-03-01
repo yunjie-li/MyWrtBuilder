@@ -81,7 +81,7 @@ PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-wrtbwmon-zh-cn"
 # PACKAGES="$PACKAGES luci-app-adguardhome"
 PACKAGES="$PACKAGES luci-app-nikki"
-PACKAGES="$PACKAGES luci-app-lucky"
+PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
 
 
 # 一些自己需要的内核组件
