@@ -71,6 +71,11 @@ jobs:
       - name: Generate Firmware
         working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
         run: |
+          cp files/.config .config
+
+      - name: Generate Firmware
+        working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
+        run: |
           bash build.sh
 
       - name: Upload VDI Image For Development Purpose
