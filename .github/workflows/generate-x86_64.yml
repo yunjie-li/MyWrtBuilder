@@ -11,10 +11,6 @@ on:
         description: Upload To Release
         required: false
         default: 'true'
-      update-urls:
-        description: Update urls
-        required: false
-        default: 'ture'
       upload-all:
         description: Upload To Artifacts
         required: false
@@ -50,9 +46,7 @@ jobs:
         with: 
           path: origin
 
-      # Update package URLs list
       - name: Update Package URLs
-        if: ${{ github.event.inputs.update-urls == 'true' }}
         working-directory: origin
         run: |
           if [ -f "external-package-urls.sh" ]; then
