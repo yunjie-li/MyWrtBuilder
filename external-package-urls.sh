@@ -5,6 +5,9 @@ set -e
 URL_FILE="external-package-urls.txt"
 GITHUB_TOKEN=${GITHUB_TOKEN:-""}
 AUTH_HEADER=""
+GIT_COMMIT=${GIT_COMMIT:-"true"}  
+GIT_PUSH=${GIT_PUSH:-"true"}    
+COMMIT_MESSAGE="Update package URLs to latest versions"
 
 # Add GitHub token to request header if available
 if [ -n "$GITHUB_TOKEN" ]; then
@@ -21,40 +24,8 @@ get_latest_release() {
 update_url() {
   local pattern="$1"
   local new_url="$2"
-  local category="$3"  # 新参数：URL 类别（普通包或压缩包）
   
-  # 检查模式是否存在于文件中
-  if grep -q "$pattern" "$URL_FILE"; then
-    # 如果存在，替换它
-    sed -i "s|$pattern|$new_url|" "$URL_FILE"
-    echo "Updated existing URL: $new_url"
-  else
-    # 如果不存在，添加它到适当的部分
-    if [ "$category" = "archive" ]; then
-      # 检查压缩包部分是否存在
-      if ! grep -q "# 压缩包" "$URL_FILE"; then
-        # 如果不存在，添加部分标题
-        echo -e "\n# 压缩包 (需要解压提取 IPK 文件)" >> "$URL_FILE"
-      fi
-      # 添加到压缩包部分
-      echo "$new_url" >> "$URL_FILE"
-    else
-      # 检查普通包部分是否存在
-      if ! grep -q "# 普通 IPK 包" "$URL_FILE"; then
-        # 如果不存在，添加部分标题
-        echo -e "# 普通 IPK 包 (直接下载)" > "$URL_FILE"
-      fi
-      # 添加到普通包部分（在压缩包部分之前）
-      if grep -q "# 压缩包" "$URL_FILE"; then
-        # 如果压缩包部分存在，在其前面插入
-        sed -i "/# 压缩包/i $new_url" "$URL_FILE"
-      else
-        # 否则直接添加到文件末尾
-        echo "$new_url" >> "$URL_FILE"
-      fi
-    fi
-    echo "Added new URL: $new_url"
-  fi
+  sed -i "s|$pattern|$new_url|" "$URL_FILE"
 }
 
 # Update luci-app-lucky related packages
@@ -105,9 +76,9 @@ update_lucky_packages() {
   fi
   
   # Update links
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-app-lucky_.*_all.ipk" "$luci_app" "normal"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-i18n-lucky-zh-cn_.*_all.ipk" "$luci_i18n" "normal"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*lucky_.*_Openwrt_x86_64.ipk" "$lucky_x86" "normal"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-app-lucky_.*_all.ipk" "$luci_app"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-i18n-lucky-zh-cn_.*_all.ipk" "$luci_i18n"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*lucky_.*_Openwrt_x86_64.ipk" "$lucky_x86"
   
   echo "Lucky package URLs updated"
 }
@@ -145,7 +116,7 @@ update_adguardhome_package() {
   fi
   
   # Update link
-  update_url "https://github.com/rufengsuixing/luci-app-adguardhome/releases/download/.*luci-app-adguardhome_.*_all.ipk" "$adguard_ipk" "normal"
+  update_url "https://github.com/rufengsuixing/luci-app-adguardhome/releases/download/.*luci-app-adguardhome_.*_all.ipk" "$adguard_ipk"
   
   echo "AdGuardHome package URL updated"
 }
@@ -174,9 +145,56 @@ update_nikki_package() {
   local nikki_tar_url="https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/$version/nikki_x86_64-openwrt-24.10.tar.gz"
   
   # Update link - preserve archive: prefix
-  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url" "archive"
+  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url"
   
   echo "Nikki package URL updated to: archive:$nikki_tar_url"
+}
+
+# Function to commit changes to Git repository
+commit_to_git() {
+  # Check if git is available
+  if ! command -v git &> /dev/null; then
+    echo "Git not found, skipping commit."
+    return 1
+  fi
+  
+  # Check if we're in a git repository
+  if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+    echo "Not in a Git repository, skipping commit."
+    return 1
+  fi
+  
+  echo "Committing changes to Git..."
+  
+  # Configure Git if in CI environment
+  if [ -n "$CI" ]; then
+    git config --global user.name "URL Update Bot"
+    git config --global user.email "bot@example.com"
+  fi
+  
+  # Add the file
+  git add "$URL_FILE"
+  
+  # Check if there are changes to commit
+  if git diff --cached --quiet; then
+    echo "No changes to commit."
+    return 0
+  fi
+  
+  # Commit the changes
+  git commit -m "$COMMIT_MESSAGE"
+  echo "Changes committed successfully."
+  
+  # Push if enabled
+  if [ "$GIT_PUSH" = "true" ]; then
+    echo "Pushing changes to remote repository..."
+    git push
+    echo "Changes pushed successfully."
+  else
+    echo "Changes committed but not pushed. Use 'git push' to push changes."
+  fi
+  
+  return 0
 }
 
 # Main function
@@ -197,12 +215,9 @@ main() {
     exit 1
   fi
   
-  # Create file with basic structure if it's empty
-  if [ ! -s "$URL_FILE" ]; then
-    echo "# 普通 IPK 包 (直接下载)" > "$URL_FILE"
-    echo -e "\n# 压缩包 (需要解压提取 IPK 文件)" >> "$URL_FILE"
-    echo "Created basic structure in empty file"
-  fi
+  # Make a backup of the original file
+  cp "$URL_FILE" "${URL_FILE}.bak"
+  echo "Backup created at ${URL_FILE}.bak"
   
   # Update package links
   update_lucky_packages
@@ -212,6 +227,21 @@ main() {
   echo "All package URLs have been updated"
   echo "Updated content of $URL_FILE:"
   cat "$URL_FILE"
+  
+  # Display file information for debugging
+  echo "File path: $(realpath $URL_FILE)"
+  echo "File exists: $(test -f $URL_FILE && echo 'Yes' || echo 'No')"
+  echo "File is writable: $(test -w $URL_FILE && echo 'Yes' || echo 'No')"
+  echo "Current working directory: $(pwd)"
+  
+  # Commit changes to Git if enabled
+  if [ "$GIT_COMMIT" = "true" ]; then
+    commit_to_git
+  else
+    echo "Git commit disabled. Changes saved but not committed."
+  fi
+  
+  echo "URL update process completed."
 }
 
 # Execute main function
