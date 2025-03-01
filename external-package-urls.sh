@@ -21,7 +21,40 @@ get_latest_release() {
 update_url() {
   local pattern="$1"
   local new_url="$2"
-  sed -i "s|$pattern|$new_url|" "$URL_FILE"
+  local category="$3"  # 新参数：URL 类别（普通包或压缩包）
+  
+  # 检查模式是否存在于文件中
+  if grep -q "$pattern" "$URL_FILE"; then
+    # 如果存在，替换它
+    sed -i "s|$pattern|$new_url|" "$URL_FILE"
+    echo "Updated existing URL: $new_url"
+  else
+    # 如果不存在，添加它到适当的部分
+    if [ "$category" = "archive" ]; then
+      # 检查压缩包部分是否存在
+      if ! grep -q "# 压缩包" "$URL_FILE"; then
+        # 如果不存在，添加部分标题
+        echo -e "\n# 压缩包 (需要解压提取 IPK 文件)" >> "$URL_FILE"
+      fi
+      # 添加到压缩包部分
+      echo "$new_url" >> "$URL_FILE"
+    else
+      # 检查普通包部分是否存在
+      if ! grep -q "# 普通 IPK 包" "$URL_FILE"; then
+        # 如果不存在，添加部分标题
+        echo -e "# 普通 IPK 包 (直接下载)" > "$URL_FILE"
+      fi
+      # 添加到普通包部分（在压缩包部分之前）
+      if grep -q "# 压缩包" "$URL_FILE"; then
+        # 如果压缩包部分存在，在其前面插入
+        sed -i "/# 压缩包/i $new_url" "$URL_FILE"
+      else
+        # 否则直接添加到文件末尾
+        echo "$new_url" >> "$URL_FILE"
+      fi
+    fi
+    echo "Added new URL: $new_url"
+  fi
 }
 
 # Update luci-app-lucky related packages
@@ -72,9 +105,9 @@ update_lucky_packages() {
   fi
   
   # Update links
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-app-lucky_.*_all.ipk" "$luci_app"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-i18n-lucky-zh-cn_.*_all.ipk" "$luci_i18n"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*lucky_.*_Openwrt_x86_64.ipk" "$lucky_x86"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-app-lucky_.*_all.ipk" "$luci_app" "normal"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-i18n-lucky-zh-cn_.*_all.ipk" "$luci_i18n" "normal"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*lucky_.*_Openwrt_x86_64.ipk" "$lucky_x86" "normal"
   
   echo "Lucky package URLs updated"
 }
@@ -112,7 +145,7 @@ update_adguardhome_package() {
   fi
   
   # Update link
-  update_url "https://github.com/rufengsuixing/luci-app-adguardhome/releases/download/.*luci-app-adguardhome_.*_all.ipk" "$adguard_ipk"
+  update_url "https://github.com/rufengsuixing/luci-app-adguardhome/releases/download/.*luci-app-adguardhome_.*_all.ipk" "$adguard_ipk" "normal"
   
   echo "AdGuardHome package URL updated"
 }
@@ -141,7 +174,7 @@ update_nikki_package() {
   local nikki_tar_url="https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/$version/nikki_x86_64-openwrt-24.10.tar.gz"
   
   # Update link - preserve archive: prefix
-  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url"
+  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url" "archive"
   
   echo "Nikki package URL updated to: archive:$nikki_tar_url"
 }
@@ -164,12 +197,21 @@ main() {
     exit 1
   fi
   
+  # Create file with basic structure if it's empty
+  if [ ! -s "$URL_FILE" ]; then
+    echo "# 普通 IPK 包 (直接下载)" > "$URL_FILE"
+    echo -e "\n# 压缩包 (需要解压提取 IPK 文件)" >> "$URL_FILE"
+    echo "Created basic structure in empty file"
+  fi
+  
   # Update package links
   update_lucky_packages
   update_adguardhome_package
   update_nikki_package
   
   echo "All package URLs have been updated"
+  echo "Updated content of $URL_FILE:"
+  cat "$URL_FILE"
 }
 
 # Execute main function
