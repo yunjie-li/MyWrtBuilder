@@ -79,7 +79,7 @@ PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn"
 
 # Packages 文件夹下的 ipk 包
 PACKAGES="$PACKAGES luci-i18n-wrtbwmon-zh-cn"
-# PACKAGES="$PACKAGES luci-app-adguardhome"
+PACKAGES="$PACKAGES luci-app-adguardhome"
 PACKAGES="$PACKAGES luci-app-nikki"
 PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
 
@@ -91,6 +91,7 @@ PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
 
 # zsh 终端
 PACKAGES="$PACKAGES zsh"
+PACKAGES="$PACKAGES git"
 # Vim 完整版，带语法高亮
 PACKAGES="$PACKAGES vim-fuller"
 # X/Y/ZMODEM 文件传输
