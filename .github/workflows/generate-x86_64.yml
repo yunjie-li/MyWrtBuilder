@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       release: 
-        description: 将编译出的镜像上传到 Release
+        description: Upload To Release
         required: false
         default: 'true'
       upload-all:
-        description: 将编译出的所有镜像都上传到 Artifacts
+        description: Upload To Artifacts
         required: false
         default: 'false'
 
@@ -46,6 +46,17 @@ jobs:
         with: 
           path: origin
 
+      - name: Update Package URLs
+        working-directory: origin
+        run: |
+          if [ -f "update-urls.sh" ]; then
+            echo "execute external-package-urls.sh..."
+            chmod +x external-package-urls.sh
+            ./external-package-urls.sh
+          else
+            echo "no external-package-urls.sh"
+          fi
+      
       - name: Download Image Builder
         run: |
           wget $DOWNLOAD_BASE/releases/$VERSION/targets/x86/64/$VENDOR-imagebuilder-$VERSION-x86-64.Linux-x86_64.tar.zst
@@ -56,10 +67,21 @@ jobs:
       - name: Download External Packages
         working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
         run: |
-          cat external-package-urls.txt | while read url; do
-            echo "Downloading: $url"
-            wget -P packages "$url" || echo "ERROR: Failed to download $url"
-          done        
+          mkdir -p packages
+          
+          if [ -f "external-package-urls.txt" ]; then
+            cat external-package-urls.txt | grep -v "^#" | while read url; do
+              [ -z "$url" ] && continue
+              
+              echo "Downloading: $url"
+              wget -P packages "$url" || echo "ERROR: Failed to download $url"
+            done
+            
+            echo "download external packages finish"
+            ls -la packages/
+          else
+            echo "external-package-urls.txt not exist"
+          fi        
       
       - name: Run Patch and DIY Scripts
         working-directory: ${{ env.VENDOR }}-imagebuilder-${{ env.VERSION }}-x86-64.Linux-x86_64
