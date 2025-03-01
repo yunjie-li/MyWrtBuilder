@@ -11,6 +11,10 @@ on:
         description: Upload To Release
         required: false
         default: 'true'
+      update-urls:
+        description: Update urls
+        required: false
+        default: 'ture'
       upload-all:
         description: Upload To Artifacts
         required: false
