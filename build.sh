@@ -25,7 +25,7 @@ PACKAGES="$PACKAGES luci-app-openclash"
 
 # 文件助手
 PACKAGES="$PACKAGES luci-i18n-package-manager-zh-cn"
-PACKAGES="$PACKAGES luci-i18n-filemanager-zh-cn"
+PACKAGES="$PACKAGES luci-app-fileassistant"
 # TTYD
 PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
 # UPNP
