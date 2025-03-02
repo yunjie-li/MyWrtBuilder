@@ -20,12 +20,65 @@ get_latest_release() {
   curl -s -H "$AUTH_HEADER" "https://api.github.com/repos/$repo/releases/latest"
 }
 
-# Function: Update URL in the file
+# Function: Update URL in the file with more precise pattern matching
 update_url() {
   local pattern="$1"
   local new_url="$2"
   
-  sed -i "s|$pattern|$new_url|" "$URL_FILE"
+  # Debug output
+  echo "Attempting to update URL pattern: $pattern"
+  echo "New URL: $new_url"
+  
+  # Check if pattern exists in file
+  if ! grep -q "$pattern" "$URL_FILE"; then
+    echo "Warning: Pattern not found in file: $pattern"
+    echo "Current file content:"
+    cat "$URL_FILE"
+    return 1
+  fi
+  
+  # Use more specific sed pattern with word boundaries where appropriate
+  sed -i "s|$pattern|$new_url|g" "$URL_FILE"
+  
+  # Verify the change was made
+  if grep -q "$new_url" "$URL_FILE"; then
+    echo "URL successfully updated to: $new_url"
+  else
+    echo "Failed to update URL. Pattern may not have matched exactly."
+    echo "Current file content after attempted update:"
+    cat "$URL_FILE"
+  fi
+}
+
+# Function: Add or update URL in the file
+add_or_update_url() {
+  local pattern="$1"
+  local new_url="$2"
+  local url_type="$3"  # Simple pattern to identify URL type (e.g., "adguardhome", "fileassistant")
+  
+  # Check if a URL of this type already exists in the file
+  if grep -q "$url_type" "$URL_FILE"; then
+    echo "Updating existing $url_type URL"
+    sed -i "s|https://[^[:space:]]*$url_type[^[:space:]]*|$new_url|g" "$URL_FILE"
+  else
+    echo "Adding new $url_type URL to file"
+    # Add before the archive section if it exists
+    if grep -q "^# 压缩包" "$URL_FILE"; then
+      sed -i "/^# 压缩包/i $new_url" "$URL_FILE"
+    else
+      # Otherwise just append to the end
+      echo "$new_url" >> "$URL_FILE"
+    fi
+  fi
+  
+  # Verify the change was made
+  if grep -q "$new_url" "$URL_FILE"; then
+    echo "URL successfully added/updated to: $new_url"
+  else
+    echo "Failed to add/update URL."
+    echo "Current file content after attempted update:"
+    cat "$URL_FILE"
+  fi
 }
 
 # Update luci-app-lucky related packages
@@ -75,10 +128,10 @@ update_lucky_packages() {
     echo "Warning: Could not find lucky_x86_64 asset, using fallback URL"
   fi
   
-  # Update links
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-app-lucky_.*_all.ipk" "$luci_app"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*luci-i18n-lucky-zh-cn_.*_all.ipk" "$luci_i18n"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*lucky_.*_Openwrt_x86_64.ipk" "$lucky_x86"
+  # Update links with more specific patterns
+  sed -i "s|https://github.com/gdy666/luci-app-lucky/releases/download/.*/luci-app-lucky_.*_all.ipk|$luci_app|g" "$URL_FILE"
+  sed -i "s|https://github.com/gdy666/luci-app-lucky/releases/download/.*/luci-i18n-lucky-zh-cn_.*_all.ipk|$luci_i18n|g" "$URL_FILE"
+  sed -i "s|https://github.com/gdy666/luci-app-lucky/releases/download/.*/lucky_.*_Openwrt_x86_64.ipk|$lucky_x86|g" "$URL_FILE"
   
   echo "Lucky package URLs updated"
 }
@@ -104,8 +157,8 @@ update_adguardhome_package() {
   
   echo "Found luci-app-adguardhome package: $latest_package"
   
-  # Update link - match any previous URL pattern for luci-app-adguardhome
-  update_url "https://[^/]*/[^/]*/luci-app-adguardhome.*_all.ipk" "$adguardhome_url"
+  # Use the new add_or_update_url function
+  add_or_update_url "luci-app-adguardhome_.*_all.ipk" "$adguardhome_url" "luci-app-adguardhome"
   
   echo "luci-app-adguardhome package URL updated to $adguardhome_url"
 }
@@ -131,14 +184,8 @@ update_adguardhome_binary() {
   
   echo "Found adguardhome binary package: $latest_package"
   
-  # Check if the URL already exists in the file
-  if grep -q "adguardhome_.*x86_64.ipk" "$URL_FILE"; then
-    # Update existing URL
-    update_url "https://[^/]*/[^/]*/adguardhome_.*x86_64.ipk" "$adguardhome_binary_url"
-  else
-    # Add new URL to the file
-    echo "$adguardhome_binary_url" >> "$URL_FILE"
-  fi
+  # Use the new add_or_update_url function
+  add_or_update_url "adguardhome_.*x86_64.ipk" "$adguardhome_binary_url" "adguardhome"
   
   echo "AdGuardHome binary package URL updated to $adguardhome_binary_url"
 }
@@ -164,14 +211,8 @@ update_fileassistant_package() {
   
   echo "Found luci-app-fileassistant package: $latest_package"
   
-  # Check if the URL already exists in the file
-  if grep -q "luci-app-fileassistant_.*_all.ipk" "$URL_FILE"; then
-    # Update existing URL
-    update_url "https://[^/]*/[^/]*/luci-app-fileassistant.*_all.ipk" "$fileassistant_url"
-  else
-    # Add new URL to the file
-    echo "$fileassistant_url" >> "$URL_FILE"
-  fi
+  # Use the new add_or_update_url function
+  add_or_update_url "luci-app-fileassistant_.*_all.ipk" "$fileassistant_url" "luci-app-fileassistant"
   
   echo "luci-app-fileassistant package URL updated to $fileassistant_url"
 }
@@ -199,8 +240,8 @@ update_nikki_package() {
   # Build new download link - keep filename unchanged, only update version
   local nikki_tar_url="https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/$version/nikki_x86_64-openwrt-24.10.tar.gz"
   
-  # Update link - preserve archive: prefix
-  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url"
+  # Update link - preserve archive: prefix with more specific pattern
+  sed -i "s|archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*/nikki_x86_64-openwrt-24.10.tar.gz|archive:$nikki_tar_url|g" "$URL_FILE"
   
   echo "Nikki package URL updated to: archive:$nikki_tar_url"
 }
@@ -274,6 +315,10 @@ main() {
   cp "$URL_FILE" "${URL_FILE}.bak"
   echo "Backup created at ${URL_FILE}.bak"
   
+  # Print original content for debugging
+  echo "Original content of $URL_FILE:"
+  cat "$URL_FILE"
+  
   # Update package links
   update_lucky_packages
   update_adguardhome_package
@@ -287,19 +332,4 @@ main() {
   
   # Display file information for debugging
   echo "File path: $(realpath $URL_FILE)"
-  echo "File exists: $(test -f $URL_FILE && echo 'Yes' || echo 'No')"
-  echo "File is writable: $(test -w $URL_FILE && echo 'Yes' || echo 'No')"
-  echo "Current working directory: $(pwd)"
-  
-  # Commit changes to Git if enabled
-  if [ "$GIT_COMMIT" = "true" ]; then
-    commit_to_git
-  else
-    echo "Git commit disabled. Changes saved but not committed."
-  fi
-  
-  echo "URL update process completed."
-}
-
-# Execute main function
-main
+  echo "File exists: $(test -f $URL_FILE && echo 'Yes'
