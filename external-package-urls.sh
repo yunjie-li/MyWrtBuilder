@@ -17,30 +17,22 @@ get_latest_release() {
   curl -s -H "$AUTH_HEADER" "https://api.github.com/repos/$1/releases/latest"
 }
 
-# Function: Add or update URL in the file
+# Function: Update URL in the file
 update_url() {
   local pattern="$1"
   local new_url="$2"
-  local url_type="${3:-}"
   
-  echo "Updating URL: $new_url"
+  echo "Attempting to update URL pattern: $pattern"
+  echo "New URL: $new_url"
   
-  if [ -n "$url_type" ] && grep -q "$url_type" "$URL_FILE"; then
-    # Update existing URL of this type
-    sed -i "s|https://[^[:space:]]*$url_type[^[:space:]]*|$new_url|g" "$URL_FILE"
-  else
-    # Update by pattern or add new
-    if grep -q "$pattern" "$URL_FILE"; then
-      sed -i "s|$pattern|$new_url|g" "$URL_FILE"
-    else
-      # Add new URL before archive section or at the end
-      if grep -q "^# 压缩包" "$URL_FILE"; then
-        sed -i "/^# 压缩包/i $new_url" "$URL_FILE"
-      else
-        echo "$new_url" >> "$URL_FILE"
-      fi
-    fi
+  # Check if pattern exists in file
+  if ! grep -q "$pattern" "$URL_FILE"; then
+    echo "Warning: Pattern not found in file: $pattern"
+    return 1
   fi
+  
+  # Update the URL
+  sed -i "s|$pattern|$new_url|g" "$URL_FILE"
   
   # Verify the change was made
   if grep -q "$new_url" "$URL_FILE"; then
@@ -78,33 +70,70 @@ update_lucky_packages() {
   local lucky_x86=$(echo "$assets" | grep "lucky_.*_Openwrt_x86_64.ipk" | head -1)
   [ -z "$lucky_x86" ] && lucky_x86="$base_url/lucky_${version#v}_Openwrt_x86_64.ipk"
   
-  # Update links
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*/luci-app-lucky_.*_all.ipk" "$luci_app"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*/luci-i18n-lucky-zh-cn_.*_all.ipk" "$luci_i18n"
-  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/.*/lucky_.*_Openwrt_x86_64.ipk" "$lucky_x86"
+  # Update links - use very specific patterns to avoid conflicts
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/v[^/]*/luci-app-lucky_[^_]*_all.ipk" "$luci_app"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/v[^/]*/luci-i18n-lucky-zh-cn_[^_]*_all.ipk" "$luci_i18n"
+  update_url "https://github.com/gdy666/luci-app-lucky/releases/download/v[^/]*/lucky_[^_]*_Openwrt_x86_64.ipk" "$lucky_x86"
 }
 
-# Update packages from openwrt.ai
-update_openwrt_ai_packages() {
-  echo "Updating packages from openwrt.ai..."
+# Update luci-app-adguardhome package
+update_adguardhome_package() {
+  echo "Updating luci-app-adguardhome package..."
   
-  # Update luci-app-adguardhome
   local html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
   local adguardhome_pkg=$(echo "$html_content" | grep -o "luci-app-adguardhome_[^\"]*_all.ipk" | head -1)
-  [ -n "$adguardhome_pkg" ] && update_url "luci-app-adguardhome_.*_all.ipk" \
-    "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$adguardhome_pkg" "luci-app-adguardhome"
   
-  # Update adguardhome binary
-  html_content=$(curl -s "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/")
+  if [ -n "$adguardhome_pkg" ]; then
+    local adguardhome_url="https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$adguardhome_pkg"
+    # Check if luci-app-adguardhome exists in the file
+    if grep -q "luci-app-adguardhome_.*_all.ipk" "$URL_FILE"; then
+      update_url "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/luci-app-adguardhome_[^_]*_all.ipk" "$adguardhome_url"
+    else
+      echo "luci-app-adguardhome not found in file, skipping update"
+    fi
+  else
+    echo "Failed to find latest luci-app-adguardhome package"
+  fi
+}
+
+# Update adguardhome binary package
+update_adguardhome_binary() {
+  echo "Updating AdGuardHome binary package..."
+  
+  local html_content=$(curl -s "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/")
   local adguardhome_bin=$(echo "$html_content" | grep -o "adguardhome_[^\"]*x86_64.ipk" | head -1)
-  [ -n "$adguardhome_bin" ] && update_url "adguardhome_.*x86_64.ipk" \
-    "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/$adguardhome_bin" "adguardhome"
   
-  # Update luci-app-fileassistant
-  html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
+  if [ -n "$adguardhome_bin" ]; then
+    local adguardhome_bin_url="https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/$adguardhome_bin"
+    # Check if adguardhome exists in the file
+    if grep -q "adguardhome_.*_x86_64.ipk" "$URL_FILE"; then
+      update_url "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/adguardhome_[^_]*_x86_64.ipk" "$adguardhome_bin_url"
+    else
+      echo "adguardhome binary not found in file, skipping update"
+    fi
+  else
+    echo "Failed to find latest adguardhome binary package"
+  fi
+}
+
+# Update luci-app-fileassistant package
+update_fileassistant_package() {
+  echo "Updating luci-app-fileassistant package..."
+  
+  local html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
   local fileassistant_pkg=$(echo "$html_content" | grep -o "luci-app-fileassistant_[^\"]*_all.ipk" | head -1)
-  [ -n "$fileassistant_pkg" ] && update_url "luci-app-fileassistant_.*_all.ipk" \
-    "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$fileassistant_pkg" "luci-app-fileassistant"
+  
+  if [ -n "$fileassistant_pkg" ]; then
+    local fileassistant_url="https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$fileassistant_pkg"
+    # Check if fileassistant exists in the file
+    if grep -q "luci-app-fileassistant_.*_all.ipk" "$URL_FILE"; then
+      update_url "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/luci-app-fileassistant_[^_]*_all.ipk" "$fileassistant_url"
+    else
+      echo "luci-app-fileassistant not found in file, skipping update"
+    fi
+  else
+    echo "Failed to find latest luci-app-fileassistant package"
+  fi
 }
 
 # Update nikki package
@@ -120,7 +149,7 @@ update_nikki_package() {
   echo "Found latest version: $version"
   
   local nikki_tar_url="https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/$version/nikki_x86_64-openwrt-24.10.tar.gz"
-  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/.*/nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url"
+  update_url "archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/v[^/]*/nikki_x86_64-openwrt-24.10.tar.gz" "archive:$nikki_tar_url"
 }
 
 # Function to commit changes to Git repository
@@ -172,12 +201,20 @@ main() {
   cp "$URL_FILE" "${URL_FILE}.bak"
   echo "Backup created at ${URL_FILE}.bak"
   
-  # Update packages
+  # Print original content for debugging
+  echo "Original content of $URL_FILE:"
+  cat "$URL_FILE"
+  
+  # Update packages - keep them separate to avoid conflicts
   update_lucky_packages
-  update_openwrt_ai_packages
+  update_adguardhome_package
+  update_adguardhome_binary
+  update_fileassistant_package
   update_nikki_package
   
   echo "All package URLs have been updated"
+  echo "Updated content of $URL_FILE:"
+  cat "$URL_FILE"
   
   # Commit changes if enabled
   [ "$GIT_COMMIT" = "true" ] && commit_to_git
