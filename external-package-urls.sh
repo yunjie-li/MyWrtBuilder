@@ -332,4 +332,9 @@ main() {
   
   # Display file information for debugging
   echo "File path: $(realpath $URL_FILE)"
-  echo "File exists: $(test -f $URL_FILE && echo 'Yes'
+  echo "File exists: $(test -f $URL_FILE && echo 'Yes' || echo 'No')"
+  echo "File is writable: $(test -w $URL_FILE && echo 'Yes' || echo 'No')"
+  echo "Current working directory: $(pwd)"
+  
+  # Commit changes to Git if enabled
+  if [ "$GIT_COMMIT" = "true" ]; then
