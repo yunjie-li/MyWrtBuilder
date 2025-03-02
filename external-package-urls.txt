@@ -2,8 +2,8 @@
 https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.7/luci-app-lucky_2.2.2-r1_all.ipk
 https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.7/luci-i18n-lucky-zh-cn_25.051.12356.38229cf_all.ipk
 https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.7/lucky_2.15.7_Openwrt_x86_64.ipk
-https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/luci-app-adguardhome_22.057.44252~a27aeb1_all.ipk
-https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/adguardhome_0.107.55-r1_x86_64.ipk
+https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/adguardhome_0.107.56-r1_x86_64.ipk
+https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/adguardhome_0.107.56-r1_x86_64.ipk
 https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/luci-app-fileassistant_26.057.44252~a27aeb1_all.ipk
 # 压缩包 (需要解压提取 IPK 文件)
 archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/v1.19.5/nikki_x86_64-openwrt-24.10.tar.gz
