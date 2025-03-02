@@ -36,6 +36,7 @@ PACKAGES="$PACKAGES luci-i18n-upnp-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn"
 
 # Packages 文件夹下的 ipk 包
+PACKAGES="$PACKAGES luci-app-adguardhome"
 PACKAGES="$PACKAGES luci-i18n-nikki-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
 
