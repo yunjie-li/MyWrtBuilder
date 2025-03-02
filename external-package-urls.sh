@@ -143,6 +143,39 @@ update_adguardhome_binary() {
   echo "AdGuardHome binary package URL updated to $adguardhome_binary_url"
 }
 
+# Update luci-app-fileassistant package
+update_fileassistant_package() {
+  echo "Updating luci-app-fileassistant package..."
+  
+  # Get the latest version from the website
+  local html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
+  
+  # Extract the latest luci-app-fileassistant package name using grep and sed
+  local latest_package=$(echo "$html_content" | grep -o "luci-app-fileassistant_[^\"]*_all.ipk" | head -1)
+  
+  if [ -z "$latest_package" ]; then
+    echo "Warning: Could not find latest luci-app-fileassistant package, using fallback pattern"
+    # Use a generic URL pattern that will match any version
+    latest_package="luci-app-fileassistant_*_all.ipk"
+  fi
+  
+  # Build the full URL
+  local fileassistant_url="https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$latest_package"
+  
+  echo "Found luci-app-fileassistant package: $latest_package"
+  
+  # Check if the URL already exists in the file
+  if grep -q "luci-app-fileassistant_.*_all.ipk" "$URL_FILE"; then
+    # Update existing URL
+    update_url "https://[^/]*/[^/]*/luci-app-fileassistant.*_all.ipk" "$fileassistant_url"
+  else
+    # Add new URL to the file
+    echo "$fileassistant_url" >> "$URL_FILE"
+  fi
+  
+  echo "luci-app-fileassistant package URL updated to $fileassistant_url"
+}
+
 # Update nikki package
 update_nikki_package() {
   echo "Updating Nikki package..."
@@ -245,6 +278,7 @@ main() {
   update_lucky_packages
   update_adguardhome_package
   update_adguardhome_binary
+  update_fileassistant_package
   update_nikki_package
   
   echo "All package URLs have been updated"
