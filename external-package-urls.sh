@@ -83,42 +83,64 @@ update_lucky_packages() {
   echo "Lucky package URLs updated"
 }
 
-# Update adguardhome package
+# Update luci-app-adguardhome package
 update_adguardhome_package() {
-  echo "Updating AdGuardHome package..."
+  echo "Updating luci-app-adguardhome package..."
   
-  # Get latest version
-  local release_data=$(get_latest_release "rufengsuixing/luci-app-adguardhome")
-  if [ -z "$release_data" ]; then
-    echo "Failed to get latest release for luci-app-adguardhome"
-    return 1
+  # Get the latest version from the website
+  local html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
+  
+  # Extract the latest luci-app-adguardhome package name using grep and sed
+  local latest_package=$(echo "$html_content" | grep -o "luci-app-adguardhome_[^\"]*_all.ipk" | head -1)
+  
+  if [ -z "$latest_package" ]; then
+    echo "Warning: Could not find latest luci-app-adguardhome package, using fallback pattern"
+    # Use a generic URL pattern that will match any version
+    latest_package="luci-app-adguardhome_*_all.ipk"
   fi
   
-  # Extract version number
-  local version=$(echo "$release_data" | grep -o '"tag_name": "[^"]*"' | cut -d'"' -f4)
-  if [ -z "$version" ]; then
-    echo "Failed to extract version"
-    return 1
+  # Build the full URL
+  local adguardhome_url="https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$latest_package"
+  
+  echo "Found luci-app-adguardhome package: $latest_package"
+  
+  # Update link - match any previous URL pattern for luci-app-adguardhome
+  update_url "https://[^/]*/[^/]*/luci-app-adguardhome.*_all.ipk" "$adguardhome_url"
+  
+  echo "luci-app-adguardhome package URL updated to $adguardhome_url"
+}
+
+# Update adguardhome binary package
+update_adguardhome_binary() {
+  echo "Updating AdGuardHome binary package..."
+  
+  # Get the latest version from the website
+  local html_content=$(curl -s "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/")
+  
+  # Extract the latest adguardhome package name using grep and sed
+  local latest_package=$(echo "$html_content" | grep -o "adguardhome_[^\"]*x86_64.ipk" | head -1)
+  
+  if [ -z "$latest_package" ]; then
+    echo "Warning: Could not find latest adguardhome binary package, using fallback pattern"
+    # Use a generic URL pattern that will match any version
+    latest_package="adguardhome_*x86_64.ipk"
   fi
   
-  echo "Found latest version: $version"
+  # Build the full URL
+  local adguardhome_binary_url="https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/$latest_package"
   
-  # Get assets list
-  local assets=$(echo "$release_data" | grep -o '"browser_download_url": "[^"]*"' | cut -d'"' -f4)
+  echo "Found adguardhome binary package: $latest_package"
   
-  # Find matching asset
-  local adguard_ipk=$(echo "$assets" | grep "luci-app-adguardhome_.*_all.ipk" | head -1)
-  
-  # Use found asset or build URL
-  if [ -z "$adguard_ipk" ]; then
-    adguard_ipk="https://github.com/rufengsuixing/luci-app-adguardhome/releases/download/$version/luci-app-adguardhome_${version}_all.ipk"
-    echo "Warning: Could not find adguardhome asset, using fallback URL"
+  # Check if the URL already exists in the file
+  if grep -q "adguardhome_.*x86_64.ipk" "$URL_FILE"; then
+    # Update existing URL
+    update_url "https://[^/]*/[^/]*/adguardhome_.*x86_64.ipk" "$adguardhome_binary_url"
+  else
+    # Add new URL to the file
+    echo "$adguardhome_binary_url" >> "$URL_FILE"
   fi
   
-  # Update link
-  update_url "https://github.com/rufengsuixing/luci-app-adguardhome/releases/download/.*luci-app-adguardhome_.*_all.ipk" "$adguard_ipk"
-  
-  echo "AdGuardHome package URL updated"
+  echo "AdGuardHome binary package URL updated to $adguardhome_binary_url"
 }
 
 # Update nikki package
@@ -222,6 +244,7 @@ main() {
   # Update package links
   update_lucky_packages
   update_adguardhome_package
+  update_adguardhome_binary
   update_nikki_package
   
   echo "All package URLs have been updated"
