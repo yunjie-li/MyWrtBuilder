@@ -24,7 +24,7 @@ PACKAGES="$PACKAGES luci-app-openclash"
 # 常用的网络存储组件
 
 # 文件助手
-PACKAGES="$PACKAGES luci-i18n-package-manager-zh-cn"
+# PACKAGES="$PACKAGES luci-i18n-package-manager-zh-cn"
 PACKAGES="$PACKAGES luci-app-fileassistant"
 # TTYD
 PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
