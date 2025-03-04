@@ -76,64 +76,42 @@ update_lucky_packages() {
   update_url "https://github.com/gdy666/luci-app-lucky/releases/download/v[^/]*/lucky_[^_]*_Openwrt_x86_64.ipk" "$lucky_x86"
 }
 
-# Update luci-app-adguardhome package
-update_adguardhome_package() {
-  echo "Updating luci-app-adguardhome package..."
+# Update luci-app-mosdns related packages
+update_mosdns_packages() {
+  echo "Updating Mosdns packages..."
   
-  local html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
-  local adguardhome_pkg=$(echo "$html_content" | grep -o "luci-app-adguardhome_[^\"]*_all.ipk" | head -1)
+  # Get latest version
+  local release_data=$(get_latest_release "sbwml/luci-app-mosdns")
+  [ -z "$release_data" ] && echo "Failed to get latest release for luci-app-mosdns" && return 1
   
-  if [ -n "$adguardhome_pkg" ]; then
-    local adguardhome_url="https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$adguardhome_pkg"
-    # Check if luci-app-adguardhome exists in the file
-    if grep -q "luci-app-adguardhome_.*_all.ipk" "$URL_FILE"; then
-      update_url "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/luci-app-adguardhome_[^_]*_all.ipk" "$adguardhome_url"
-    else
-      echo "luci-app-adguardhome not found in file, skipping update"
-    fi
-  else
-    echo "Failed to find latest luci-app-adguardhome package"
-  fi
-}
+  # Extract version number
+  local version=$(echo "$release_data" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4)
+  [ -z "$version" ] && echo "Failed to extract version" && return 1
+  
+  echo "Found latest version: $version"
+  
+  # Build download links
+  local base_url="https://github.com/sbwml/luci-app-mosdns/releases/download/$version"
+  local assets=$(echo "$release_data" | grep -o '"browser_download_url": "[^"]*"' | cut -d'"' -f4)
+  
+  # Find matching assets or use fallbacks
+  local mosdns_app=$(echo "$assets" | grep "luci-app-mosdns_.*_all.ipk" | head -1)
+  [ -z "$mosdns_app" ] && mosdns_app="$base_url/luci-app-mosdns_${version#v}_all.ipk"
+  
+  local mosdns_i18n=$(echo "$assets" | grep "luci-i18n-mosdns-zh-cn_*_all.ipk" | head -1)
+  [ -z "$mosdns_i18n" ] && mosdns_i18n="$base_url/luci-i18n-mosdns-zh-cn_${version#v}_all.ipk"
+  
+  local mosdns_x86=$(echo "$assets" | grep "mosdns_*_x86_64.ipk" | head -1)
+  [ -z "$mosdns_x86" ] && mosdns_x86="$base_url/mosdns_${version#v}_x86_64.ipk"
 
-# Update adguardhome binary package
-update_adguardhome_binary() {
-  echo "Updating AdGuardHome binary package..."
+  local v2dat_x86=$(echo "$assets" | grep "v2dat_*_x86_64.ipk" | head -1)
+  [ -z "$v2dat_x86" ] && v2dat_x86="$base_url/v2dat_${version#v}_x86_64.ipk"
   
-  local html_content=$(curl -s "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/")
-  local adguardhome_bin=$(echo "$html_content" | grep -o "adguardhome_[^\"]*x86_64.ipk" | head -1)
-  
-  if [ -n "$adguardhome_bin" ]; then
-    local adguardhome_bin_url="https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/$adguardhome_bin"
-    # Check if adguardhome exists in the file
-    if grep -q "adguardhome_.*_x86_64.ipk" "$URL_FILE"; then
-      update_url "https://dl.openwrt.ai/releases/24.10/packages/x86_64/packages/adguardhome_[^_]*_x86_64.ipk" "$adguardhome_bin_url"
-    else
-      echo "adguardhome binary not found in file, skipping update"
-    fi
-  else
-    echo "Failed to find latest adguardhome binary package"
-  fi
-}
-
-# Update luci-app-fileassistant package
-update_fileassistant_package() {
-  echo "Updating luci-app-fileassistant package..."
-  
-  local html_content=$(curl -s "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/")
-  local fileassistant_pkg=$(echo "$html_content" | grep -o "luci-app-fileassistant_[^\"]*_all.ipk" | head -1)
-  
-  if [ -n "$fileassistant_pkg" ]; then
-    local fileassistant_url="https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/$fileassistant_pkg"
-    # Check if fileassistant exists in the file
-    if grep -q "luci-app-fileassistant_.*_all.ipk" "$URL_FILE"; then
-      update_url "https://dl.openwrt.ai/packages-24.10/x86_64/kiddin9/luci-app-fileassistant_[^_]*_all.ipk" "$fileassistant_url"
-    else
-      echo "luci-app-fileassistant not found in file, skipping update"
-    fi
-  else
-    echo "Failed to find latest luci-app-fileassistant package"
-  fi
+  # Update links - use very specific patterns to avoid conflicts
+  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/luci-app-mosdns_[^_]*_all.ipk" "$mosdns_app"
+  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/luci-i18n-mosdns-zh-cn_[^_]*_all.ipk" "$mosdns_i18n"
+  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/mosdns_[^_]*_x86_64.ipk" "$mosdns_x86"
+  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/mosdns_[^_]*_x86_64.ipk" "$v2dat_x86"
 }
 
 # Update nikki package
@@ -207,9 +185,7 @@ main() {
   
   # Update packages - keep them separate to avoid conflicts
   update_lucky_packages
-  update_adguardhome_package
-  update_adguardhome_binary
-  update_fileassistant_package
+  update_mosdns_packages
   update_nikki_package
   
   echo "All package URLs have been updated"
