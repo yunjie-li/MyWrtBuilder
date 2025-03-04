@@ -85,33 +85,46 @@ update_mosdns_packages() {
   [ -z "$release_data" ] && echo "Failed to get latest release for luci-app-mosdns" && return 1
   
   # Extract version number
-  local version=$(echo "$release_data" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4)
+  local version=$(echo "$release_data" | grep -o '"tag_name": "[^"]*"' | cut -d'"' -f4)
   [ -z "$version" ] && echo "Failed to extract version" && return 1
   
   echo "Found latest version: $version"
   
-  # Build download links
-  local base_url="https://github.com/sbwml/luci-app-mosdns/releases/download/$version"
+  # Get actual asset list from GitHub
   local assets=$(echo "$release_data" | grep -o '"browser_download_url": "[^"]*"' | cut -d'"' -f4)
   
-  # Find matching assets or use fallbacks
+  # Find actual assets that exist in the release
   local mosdns_app=$(echo "$assets" | grep "luci-app-mosdns_.*_all.ipk" | head -1)
-  [ -z "$mosdns_app" ] && mosdns_app="$base_url/luci-app-mosdns_${version#v}_all.ipk"
+  local mosdns_i18n=$(echo "$assets" | grep "luci-i18n-mosdns-zh-cn_.*_all.ipk" | head -1)
+  local mosdns_x86=$(echo "$assets" | grep "mosdns_.*_x86_64.ipk" | head -1)
+  local v2dat_x86=$(echo "$assets" | grep "v2dat_.*_x86_64.ipk" | head -1)
   
-  local mosdns_i18n=$(echo "$assets" | grep "luci-i18n-mosdns-zh-cn_*_all.ipk" | head -1)
-  [ -z "$mosdns_i18n" ] && mosdns_i18n="$base_url/luci-i18n-mosdns-zh-cn_${version#v}_all.ipk"
+  # Debug output
+  echo "Found assets:"
+  [ -n "$mosdns_app" ] && echo "- App: $mosdns_app" || echo "- App: Not found"
+  [ -n "$mosdns_i18n" ] && echo "- i18n: $mosdns_i18n" || echo "- i18n: Not found"
+  [ -n "$mosdns_x86" ] && echo "- mosdns: $mosdns_x86" || echo "- mosdns: Not found"
+  [ -n "$v2dat_x86" ] && echo "- v2dat: $v2dat_x86" || echo "- v2dat: Not found"
   
-  local mosdns_x86=$(echo "$assets" | grep "mosdns_*_x86_64.ipk" | head -1)
-  [ -z "$mosdns_x86" ] && mosdns_x86="$base_url/mosdns_${version#v}_x86_64.ipk"
-
-  local v2dat_x86=$(echo "$assets" | grep "v2dat_*_x86_64.ipk" | head -1)
-  [ -z "$v2dat_x86" ] && v2dat_x86="$base_url/v2dat_${version#v}_x86_64.ipk"
+  # Only update URLs for assets that actually exist
+  [ -n "$mosdns_app" ] && update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/[^/]*/luci-app-mosdns_[^_]*_all.ipk" "$mosdns_app"
+  [ -n "$mosdns_i18n" ] && update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/[^/]*/luci-i18n-mosdns-zh-cn_[^_]*_all.ipk" "$mosdns_i18n"
+  [ -n "$mosdns_x86" ] && update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/[^/]*/mosdns_[^_]*_x86_64.ipk" "$mosdns_x86"
+  [ -n "$v2dat_x86" ] && update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/[^/]*/v2dat_[^_]*_x86_64.ipk" "$v2dat_x86"
   
-  # Update links - use very specific patterns to avoid conflicts
-  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/luci-app-mosdns_[^_]*_all.ipk" "$mosdns_app"
-  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/luci-i18n-mosdns-zh-cn_[^_]*_all.ipk" "$mosdns_i18n"
-  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/mosdns_[^_]*_x86_64.ipk" "$mosdns_x86"
-  update_url "https://github.com/sbwml/luci-app-mosdns/releases/download/v[^/]*/mosdns_[^_]*_x86_64.ipk" "$v2dat_x86"
+  # If v2dat is not found in the release, try to find it from previous entries
+  if [ -z "$v2dat_x86" ]; then
+    echo "v2dat package not found in latest release, checking for existing v2dat URL..."
+    local existing_v2dat=$(grep -o "https://github.com/sbwml/luci-app-mosdns/releases/download/[^/]*/v2dat_[^_]*_x86_64.ipk" "$URL_FILE" | head -1)
+    
+    if [ -n "$existing_v2dat" ]; then
+      echo "Using existing v2dat URL: $existing_v2dat"
+      # Keep the existing URL
+    else
+      echo "No existing v2dat URL found. Adding warning comment."
+      echo "# WARNING: v2dat package not found in release $version" >> "$TEMP_FILE"
+    fi
+  fi
 }
 
 # Update nikki package
