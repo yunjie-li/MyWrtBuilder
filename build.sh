@@ -24,7 +24,6 @@ PACKAGES="$PACKAGES luci-app-openclash"
 # 常用的网络存储组件
 
 # 文件助手
-# PACKAGES="$PACKAGES luci-i18n-package-manager-zh-cn"
 PACKAGES="$PACKAGES luci-app-fileassistant"
 # TTYD
 PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
@@ -36,9 +35,9 @@ PACKAGES="$PACKAGES luci-i18n-upnp-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn"
 
 # Packages 文件夹下的 ipk 包
-PACKAGES="$PACKAGES luci-app-adguardhome"
 PACKAGES="$PACKAGES luci-i18n-nikki-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
+PACKAGES="$PACKAGES luci-i18n-mosdns-zh-cn"
 
 # 一些其他可能有用的包
 
