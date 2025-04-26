@@ -19,11 +19,16 @@ gzip -d clash-linux-amd64-$VERSION.gz
 rm -rf clash-linux-amd64-$VERSION.gz
 mv clash-linux-amd64-$VERSION clash_tun
 
-# Clash Meta
-wget https://raw.githubusercontent.com/vernesong/OpenClash/core/master/meta/clash-linux-amd64.tar.gz
-tar -zxvf clash-linux-amd64.tar.gz
-rm -rf clash-linux-amd64.tar.gz
+# # Clash Meta
+# wget https://raw.githubusercontent.com/vernesong/OpenClash/core/master/meta/clash-linux-amd64.tar.gz
+# tar -zxvf clash-linux-amd64.tar.gz
+# rm -rf clash-linux-amd64.tar.gz
+# mv clash clash_meta
+
+wget https://github.com/vernesong/OpenClash/releases/download/mihomo/clash-linux-amd64-v3.tar.gz
+tar -zxvf clash-linux-amd64-v3
+rm -rf clash-linux-amd64-v3
 mv clash clash_meta
 
 # Use clash_dev as default core
-mv clash_dev clash
+mv clash_meta clash
