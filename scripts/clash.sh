@@ -26,8 +26,8 @@ mv clash-linux-amd64-$VERSION clash_tun
 # mv clash clash_meta
 
 wget https://github.com/vernesong/OpenClash/releases/download/mihomo/clash-linux-amd64-v3.tar.gz
-tar -zxvf clash-linux-amd64-v3
-rm -rf clash-linux-amd64-v3
+tar -zxvf clash-linux-amd64-v3.tar.gz
+rm -rf clash-linux-amd64-v3.tar.gz
 mv clash clash_meta
 
 # Use clash_dev as default core
