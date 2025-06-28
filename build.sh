@@ -32,11 +32,10 @@ PACKAGES="$PACKAGES luci-i18n-upnp-zh-cn"
 
 
 # 界面翻译补全
-PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-opkg-zh-cn"
+PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn"
 
 # Packages 文件夹下的 ipk 包
 PACKAGES="$PACKAGES luci-i18n-nikki-zh-cn"
-PACKAGES="$PACKAGES luci-i18n-lucky-zh-cn"
 
 # 一些其他可能有用的包
 
