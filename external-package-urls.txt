@@ -7,4 +7,4 @@ https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r4/luci-i18n-m
 https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r4/mosdns_5.3.3-r4_x86_64.ipk
 https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r4/v2dat_2022.12.15.47b8ee51-r2_x86_64.ipk
 # 压缩包 (需要解压提取 IPK 文件)
-archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/v1.22.2/nikki_x86_64-openwrt-24.10.tar.gz
+archive:https://github.com/nikkinikki-org/OpenWrt-nikki/releases/download/v1.23.2/nikki_x86_64-openwrt-24.10.tar.gz
