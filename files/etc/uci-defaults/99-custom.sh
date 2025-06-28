@@ -21,7 +21,7 @@ uci set network.wan6.device='eth3'
 uci delete ttyd.@ttyd[0].interface
 
 # 设置 SSH
-uci set dropbear.@dropbear[0].Interface='lan'
+uci set dropbear.@dropbear[0].Interface=''
 
 uci commit
 
