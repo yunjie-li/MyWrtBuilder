@@ -19,18 +19,13 @@ cd files/etc/openclash/core || (echo "Clash core path does not exist! " && exit)
 # rm -rf clash-linux-amd64-$VERSION.gz
 # mv clash-linux-amd64-$VERSION clash_tun
 
-# # Clash Meta
-# wget https://raw.githubusercontent.com/vernesong/OpenClash/core/master/meta/clash-linux-amd64.tar.gz
-# tar -zxvf clash-linux-amd64.tar.gz
-# rm -rf clash-linux-amd64.tar.gz
-# mv clash clash_meta
+# Clash Meta
+wget https://github.com/vernesong/OpenClash/raw/refs/heads/core/dev/meta/clash-linux-amd64.tar.gz
+tar -zxvf clash-linux-amd64.tar.gz
+rm -rf clash-linux-amd64.tar.gz
+mv clash clash_meta
 
-# wget https://github.com/vernesong/OpenClash/releases/download/mihomo/clash-linux-amd64-v3.tar.gz
-# tar -zxvf clash-linux-amd64-v3.tar.gz
-# rm -rf clash-linux-amd64-v3.tar.gz
-# mv clash clash_meta
-
-wget https://github.com/vernesong/OpenClash/blob/core/dev/smart/clash-linux-amd64.tar.gz
+wget https://github.com/vernesong/OpenClash/raw/refs/heads/core/dev/smart/clash-linux-amd64.tar.gz
 tar -zxvf clash-linux-amd64.tar.gz
 rm -rf clash-linux-amd64.tar.gz
 mv clash clash_smart
