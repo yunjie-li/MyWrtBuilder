@@ -29,7 +29,8 @@ PACKAGES="$PACKAGES luci-app-openclash"
 PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
 # UPNP
 PACKAGES="$PACKAGES luci-i18n-upnp-zh-cn"
-
+# frpc
+PACKAGES="$PACKAGES luci-i18n-frpc-zh-cn"
 
 # 界面翻译补全
 PACKAGES="$PACKAGES luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-package-manager-zh-cn"
