@@ -23,8 +23,8 @@ PACKAGES="$PACKAGES luci-app-openclash"
 
 # 常用的网络存储组件
 
-# 文件助手
-# PACKAGES="$PACKAGES luci-app-fileassistant"
+# filemanager
+PACKAGES="$PACKAGES luci-i18n-filemanager-zh-cn"
 # TTYD
 PACKAGES="$PACKAGES luci-i18n-ttyd-zh-cn"
 # UPNP
