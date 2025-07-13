@@ -20,5 +20,6 @@ mv clash clash_smart
 # Use clash_dev as default core
 mv clash_smart clash
 
-wget -qO- https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat > files/etc/openclash/GeoIP.dat
-wget -qO- https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat > files/etc/openclash/GeoSite.dat
+cd files/etc/openclash
+wget https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+wget https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
