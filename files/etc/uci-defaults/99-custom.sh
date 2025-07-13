@@ -23,6 +23,9 @@ uci delete ttyd.@ttyd[0].interface
 # 设置 SSH
 uci set dropbear.@dropbear[0].Interface=''
 
+# 修改 ttyd 配置，设置为无密码登录
+sed -i 's|/bin/login|/bin/login -f root|g' /etc/config/ttyd
+
 uci commit
 
 # 设置编译作者信息
